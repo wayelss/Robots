@@ -1,0 +1,5 @@
+/bin/
+/.settings/
+
+# Project exclude paths
+/target/
