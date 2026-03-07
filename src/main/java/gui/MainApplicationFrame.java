@@ -16,19 +16,15 @@ import log.Logger;
 
 import static java.awt.SystemColor.desktop;
 
-/**
- * Что требуется сделать:
- * 1. Метод создания меню перегружен функционалом и трудно читается.
- * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
- *
- */
+
 public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
+    WindowStateManager windowStateManager = new WindowStateManager(desktopPane);
 
 
     public MainApplicationFrame() {
-        setUpRussianLanguage();
+        UI.setUpRussianLanguage();
         configureMainWindow();
         setContentPane(desktopPane);
         createAndAddWindows();
@@ -48,7 +44,7 @@ public class MainApplicationFrame extends JFrame
     private void createAndAddWindows() {
         addLogWindow();
         addGameWindow();
-        loadWindowStates();
+        windowStateManager.loadWindowStates();
     }
 
     private void addGameWindow() {
@@ -89,61 +85,23 @@ public class MainApplicationFrame extends JFrame
         frame.setVisible(true);
     }
 
-//    protected JMenuBar createMenuBar() {
-//        JMenuBar menuBar = new JMenuBar();
-//
-//        //Set up the lone menu.
-//        JMenu menu = new JMenu("Document");
-//        menu.setMnemonic(KeyEvent.VK_D);
-//        menuBar.add(menu);
-//
-//        //Set up the first menu item.
-//        JMenuItem menuItem = new JMenuItem("New");
-//        menuItem.setMnemonic(KeyEvent.VK_N);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_N, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("new");
-////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-//
-//        //Set up the second menu item.
-//        menuItem = new JMenuItem("Quit");
-//        menuItem.setMnemonic(KeyEvent.VK_Q);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_Q, ActionEvent.ALT_MASK));
-//        menuItem.setActionCommand("quit");
-    ////        menuItem.addActionListener(this);
-//        menu.add(menuItem);
-//
-//        return menuBar;
-//    }
-
     private JMenuBar generateMenuBar()
     {
         JMenuBar menuBar = new JMenuBar();
+
         JMenu lookAndFeelMenu = createLookAndFeelMenu();
-
-        {
-            JMenuItem systemLookAndFeel = createSystemLookAndFeel();
-            JMenuItem crossplatformLookAndFeel = createCrossplatformLookAndFeel();
-            lookAndFeelMenu.add(crossplatformLookAndFeel);
-            lookAndFeelMenu.add(systemLookAndFeel);
-        }
-
         JMenu testMenu = createTestMenu();
-
-        {
-            JMenuItem addLogMessageItem = createAddLogMessageItem();
-            testMenu.add(addLogMessageItem);
-        }
+        JMenu openWindows = createOpenWindowsMenu();
 
         JMenuItem exitPoint = closeApplication();
         exitPoint.setMaximumSize(exitPoint.getPreferredSize());
 
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
+        menuBar.add(openWindows);
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(exitPoint);
+
         return menuBar;
     }
 
@@ -182,7 +140,56 @@ public class MainApplicationFrame extends JFrame
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
                 "Управление режимом отображения приложения");
 
+        lookAndFeelMenu.add(createSystemLookAndFeel());
+        lookAndFeelMenu.add(createCrossplatformLookAndFeel());
+
         return lookAndFeelMenu;
+    }
+
+    private JMenu createOpenWindowsMenu(){
+        JMenu openWindowsMenu = new JMenu("Открыть окна");
+        openWindowsMenu.setMnemonic(KeyEvent.VK_V);
+
+        openWindowsMenu.add(createOpenGameWindow());
+        openWindowsMenu.add(createOpenLogWindow());
+
+        return openWindowsMenu;
+    }
+
+    private JMenuItem createOpenGameWindow(){
+        JMenuItem createOpenGameWindow = new JMenuItem("Открыть игру");
+        createOpenGameWindow.addActionListener(e -> {
+            boolean windowExists = false;
+            for(JInternalFrame frame : desktopPane.getAllFrames()){
+                if (frame instanceof GameWindow) {
+                    windowExists = true;
+                    break;
+                }
+            }
+        if(!windowExists){
+            addGameWindow();
+            Logger.debug("Игры открылась!");
+        }
+        });
+        return createOpenGameWindow;
+    }
+
+    private JMenuItem createOpenLogWindow(){
+        JMenuItem createOpenGameWindow = new JMenuItem("Открыть логи");
+        createOpenGameWindow.addActionListener(e -> {
+            boolean windowExists = false;
+            for(JInternalFrame frame : desktopPane.getAllFrames()){
+                if (frame instanceof GameWindow) {
+                    windowExists = true;
+                    break;
+                }
+            }
+            if(!windowExists){
+                addLogWindow();
+                Logger.debug("Логи открылись!");
+            }
+        });
+        return createOpenGameWindow;
     }
 
     private JMenu createTestMenu(){
@@ -191,10 +198,10 @@ public class MainApplicationFrame extends JFrame
         testMenu.getAccessibleContext().setAccessibleDescription(
                 "Тестовые команды");
 
+        testMenu.add(createAddLogMessageItem());
+
         return testMenu;
     }
-
-
 
     private JMenuItem closeApplication(){
         JMenuItem exitPoint = new JMenuItem("Закрыть приложение");
@@ -208,7 +215,7 @@ public class MainApplicationFrame extends JFrame
         if (result == JOptionPane.YES_OPTION){
             Window[] windows = Window.getWindows();
             for(Window window: windows){
-                saveWindowStates();
+                windowStateManager.saveWindowStates();
                 window.dispose();
                 System.exit(0);
             }
@@ -229,89 +236,4 @@ public class MainApplicationFrame extends JFrame
         }
     }
 
-    private void setUpRussianLanguage(){
-        UIManager.put("InternalFrame.maxButtonToolTip", "Развернуть");
-        UIManager.put("InternalFrame.closeButtonToolTip", "Закрыть");
-        UIManager.put("InternalFrame.iconButtonToolTip", "Свернуть");
-        UIManager.put("InternalFrameTitlePane.restoreButtonText", "Восстановить");
-        UIManager.put("InternalFrameTitlePane.moveButtonText", "Переместить");
-        UIManager.put("InternalFrameTitlePane.sizeButtonText", "Размер");
-        UIManager.put("InternalFrameTitlePane.minimizeButtonText", "Свернуть");
-        UIManager.put("InternalFrameTitlePane.maximizeButtonText", "Развернуть");
-        UIManager.put("InternalFrameTitlePane.closeButtonText", "Закрыть");
-        UIManager.put("OptionPane.yesButtonText"   , "Да"    );
-        UIManager.put("OptionPane.noButtonText"    , "Нет"   );
-        UIManager.put("OptionPane.close","Закрыть");
-    }
-
-    private void saveWindowStates() {
-        Properties props = new Properties();
-        JInternalFrame[] frames = desktopPane.getAllFrames();
-        for (int i = 0; i < frames.length; i++) {
-            JInternalFrame frame = frames[i];
-            String prefix = "window." + i + ".";
-            props.setProperty(prefix + "class", frame.getClass().getName());
-            props.setProperty(prefix + "x", String.valueOf(frame.getX()));
-            props.setProperty(prefix + "y", String.valueOf(frame.getY()));
-            props.setProperty(prefix + "width", String.valueOf(frame.getWidth()));
-            props.setProperty(prefix + "height", String.valueOf(frame.getHeight()));
-            props.setProperty(prefix + "icon", String.valueOf(frame.isIcon()));
-            props.setProperty(prefix + "maximum", String.valueOf(frame.isMaximum()));
-        }
-        try (FileOutputStream out = new FileOutputStream(getStateFile())) {
-            props.storeToXML(out, "Window states");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadWindowStates() {
-        File file = getStateFile();
-        if (!file.exists()) return;
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream(file)) {
-            props.loadFromXML(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        JInternalFrame[] frames = desktopPane.getAllFrames();
-        for (int i = 0; i < frames.length; i++) {
-            String prefix = "window." + i + ".";
-            JInternalFrame frame = frames[i];
-            try {
-                int x = Integer.parseInt(props.getProperty(prefix + "x", "0"));
-                int y = Integer.parseInt(props.getProperty(prefix + "y", "0"));
-                int width = Integer.parseInt(props.getProperty(prefix + "width", "300"));
-                int height = Integer.parseInt(props.getProperty(prefix + "height", "200"));
-                boolean icon = Boolean.parseBoolean(props.getProperty(prefix + "icon", "false"));
-                boolean max = Boolean.parseBoolean(props.getProperty(prefix + "maximum", "false"));
-
-                frame.setBounds(x, y, width, height);
-                try {
-                    if (max) {
-                        frame.setMaximum(true);
-                    } else if (icon) {
-                        frame.setIcon(true);
-                    } else {
-                        frame.setIcon(false);
-                    }
-                } catch (PropertyVetoException e) {
-                    e.printStackTrace();
-                }
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private File getStateFile() {
-        String userHome = System.getProperty("user.home");
-        File dir = new File(userHome, ".robots");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return new File(dir, "windows.xml");
-    }
 }
