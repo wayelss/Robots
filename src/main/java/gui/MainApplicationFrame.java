@@ -21,7 +21,7 @@ public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
     WindowStateManager windowStateManager = new WindowStateManager(desktopPane);
-
+    private RobotModel robotModel = new RobotModel();
 
     public MainApplicationFrame() {
         UI.setUpRussianLanguage();
@@ -44,13 +44,21 @@ public class MainApplicationFrame extends JFrame
     private void createAndAddWindows() {
         addLogWindow();
         addGameWindow();
+        addCoordinateWindow(); // Добавляем новое окно
         windowStateManager.loadWindowStates();
     }
 
     private void addGameWindow() {
-        GameWindow gameWindow = new GameWindow();
+        GameWindow gameWindow = new GameWindow(robotModel); // Передаем модель
         gameWindow.setSize(400, 400);
         addWindow(gameWindow);
+    }
+
+    private void addCoordinateWindow() {
+        CoordinateWindow coordWindow = new CoordinateWindow(robotModel);
+        coordWindow.setSize(200, 100);
+        coordWindow.setLocation(320, 10);
+        addWindow(coordWindow);
     }
 
     private void configureWindowClosing() {
