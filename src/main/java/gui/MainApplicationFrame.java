@@ -44,12 +44,12 @@ public class MainApplicationFrame extends JFrame
     private void createAndAddWindows() {
         addLogWindow();
         addGameWindow();
-        addCoordinateWindow(); // Добавляем новое окно
+        addCoordinateWindow();
         windowStateManager.loadWindowStates();
     }
 
     private void addGameWindow() {
-        GameWindow gameWindow = new GameWindow(robotModel); // Передаем модель
+        GameWindow gameWindow = new GameWindow(robotModel);
         gameWindow.setSize(400, 400);
         addWindow(gameWindow);
     }
@@ -160,6 +160,7 @@ public class MainApplicationFrame extends JFrame
 
         openWindowsMenu.add(createOpenGameWindow());
         openWindowsMenu.add(createOpenLogWindow());
+        openWindowsMenu.add(createOpenCoordinates());
 
         return openWindowsMenu;
     }
@@ -187,7 +188,7 @@ public class MainApplicationFrame extends JFrame
         createOpenGameWindow.addActionListener(e -> {
             boolean windowExists = false;
             for(JInternalFrame frame : desktopPane.getAllFrames()){
-                if (frame instanceof GameWindow) {
+                if (frame instanceof LogWindow) {
                     windowExists = true;
                     break;
                 }
@@ -195,6 +196,24 @@ public class MainApplicationFrame extends JFrame
             if(!windowExists){
                 addLogWindow();
                 Logger.debug("Логи открылись!");
+            }
+        });
+        return createOpenGameWindow;
+    }
+
+    private JMenuItem createOpenCoordinates(){
+        JMenuItem createOpenGameWindow = new JMenuItem("Открыть координаты");
+        createOpenGameWindow.addActionListener(e -> {
+            boolean windowExists = false;
+            for(JInternalFrame frame : desktopPane.getAllFrames()){
+                if (frame instanceof CoordinateWindow) {
+                    windowExists = true;
+                    break;
+                }
+            }
+            if(!windowExists){
+                addCoordinateWindow();
+                Logger.debug("координаты открылись!");
             }
         });
         return createOpenGameWindow;
