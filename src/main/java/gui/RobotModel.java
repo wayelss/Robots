@@ -7,7 +7,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-
 public class RobotModel {
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
@@ -16,7 +15,7 @@ public class RobotModel {
     private volatile int m_targetPositionY = 100;
 
     private static final double maxVelocity = 0.1;
-    private static final double maxAngularVelocity = 0.001;
+    private static final double maxAngularVelocity = 0.005;
 
 
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
@@ -63,24 +62,24 @@ public class RobotModel {
 
     private void updateModel() {
         double distance = distance(m_targetPositionX, m_targetPositionY, m_robotPositionX, m_robotPositionY);
-        if (distance < 0.5) return;
+        if (distance < 68.0) return;
 
-        double velocity = maxVelocity;
         double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
-        double angularVelocity = 0;
 
         double angleDifference = angleToTarget - m_robotDirection;
         while (angleDifference < -Math.PI) angleDifference += 2 * Math.PI;
         while (angleDifference > Math.PI) angleDifference -= 2 * Math.PI;
 
-        if (angleDifference > 0) angularVelocity = maxAngularVelocity;
-        else if (angleDifference < 0) angularVelocity = -maxAngularVelocity;
+        double velocity = maxVelocity * Math.max(0, Math.cos(angleDifference));
+
+        double angularVelocity = angleDifference * 0.02;
+
+        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
 
         moveRobot(velocity, angularVelocity, 10);
 
         support.firePropertyChange("robotPosition", null, new Point((int)m_robotPositionX, (int)m_robotPositionY));
     }
-
 
     private static double applyLimits(double value, double min, double max)
     {

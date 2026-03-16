@@ -16,7 +16,7 @@ public class CoordinateWindow extends JInternalFrame implements PropertyChangeLi
 
         coordinatesLabel = new JLabel("X: 100, Y: 100");
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(coordinatesLabel, BorderLayout.CENTER);
+        panel.add(coordinatesLabel);
 
         getContentPane().add(panel);
         pack();
@@ -24,7 +24,6 @@ public class CoordinateWindow extends JInternalFrame implements PropertyChangeLi
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        // Этот метод автоматически вызывается моделью при обновлении
         if ("robotPosition".equals(evt.getPropertyName())) {
             java.awt.Point pos = (java.awt.Point) evt.getNewValue();
             coordinatesLabel.setText(String.format("X: %d, Y: %d", pos.x, pos.y));
