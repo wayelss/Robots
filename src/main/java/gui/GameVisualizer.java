@@ -31,7 +31,6 @@ public class GameVisualizer extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Отправляем новые координаты клика в модель
                 model.setTargetPosition(e.getPoint());
                 repaint();
             }
@@ -42,7 +41,7 @@ public class GameVisualizer extends JPanel {
     @Override
     protected void paintComponent(Graphics g)
     {
-        super.paintComponent(g); // Используем paintComponent вместо paint
+        super.paintComponent(g);
         Graphics2D g2d = (Graphics2D)g;
 
         drawRobot(g2d, (int)Math.round(model.getX()), (int)Math.round(model.getY()), model.getDirection());
@@ -61,10 +60,8 @@ public class GameVisualizer extends JPanel {
 
     private void drawRobot(Graphics2D g, int x, int y, double direction)
     {
-        // 1. Запоминаем изначальную сетку координат
         AffineTransform oldTransform = g.getTransform();
 
-        // 2. Накладываем поворот поверх текущей сетки
         g.rotate(direction, x, y);
 
         g.setColor(Color.MAGENTA);
@@ -76,13 +73,11 @@ public class GameVisualizer extends JPanel {
         g.setColor(Color.BLACK);
         drawOval(g, x  + 10, y, 5, 5);
 
-        // 3. Возвращаем старую сетку координат, чтобы не сломать отрисовку остального
         g.setTransform(oldTransform);
     }
 
     private void drawTarget(Graphics2D g, int x, int y)
     {
-        // Для цели поворот не нужен вообще, поэтому просто рисуем её
         g.setColor(Color.GREEN);
         fillOval(g, x, y, 5, 5);
         g.setColor(Color.BLACK);
