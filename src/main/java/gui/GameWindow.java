@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.util.ResourceBundle;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
@@ -11,11 +12,18 @@ public class GameWindow extends JInternalFrame
 
     public GameWindow(RobotModel robotModel)
     {
-        super("Игровое поле", true, true, true, true);
+        super(Localization.getResourceBundle().
+                getString("window.game.title"),
+                true, true, true, true);
         m_visualizer = new GameVisualizer(robotModel);
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_visualizer, BorderLayout.CENTER);
         getContentPane().add(panel);
         pack();
+    }
+
+    public void updateText(){
+        ResourceBundle resourceBundle = Localization.getResourceBundle();
+        setTitle(resourceBundle.getString("window.game.title"));
     }
 }
