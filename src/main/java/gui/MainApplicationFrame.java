@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 import javax.swing.*;
 
@@ -20,11 +21,14 @@ import static java.awt.SystemColor.desktop;
 public class MainApplicationFrame extends JFrame
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    WindowStateManager windowStateManager = new WindowStateManager(desktopPane);
+    private WindowStateManager windowStateManager = new WindowStateManager(desktopPane);
     private RobotModel robotModel = new RobotModel();
+    private CoordinateWindow coordWindow;
+    private GameWindow gameWindow;
+    private LogWindow logWindow;
 
     public MainApplicationFrame() {
-        UI.setUpRussianLanguage();
+        Localization.setUpEnglishLanguage();
         configureMainWindow();
         setContentPane(desktopPane);
         createAndAddWindows();
@@ -49,13 +53,13 @@ public class MainApplicationFrame extends JFrame
     }
 
     private void addGameWindow() {
-        GameWindow gameWindow = new GameWindow(robotModel);
+        gameWindow = new GameWindow(robotModel);
         gameWindow.setSize(400, 400);
         addWindow(gameWindow);
     }
 
     private void addCoordinateWindow() {
-        CoordinateWindow coordWindow = new CoordinateWindow(robotModel);
+        coordWindow = new CoordinateWindow(robotModel);
         coordWindow.setSize(200, 100);
         coordWindow.setLocation(320, 10);
         addWindow(coordWindow);
@@ -72,7 +76,7 @@ public class MainApplicationFrame extends JFrame
     }
 
     private void addLogWindow() {
-        LogWindow logWindow = createLogWindow();
+        logWindow = createLogWindow();
         addWindow(logWindow);
     }
 
@@ -81,9 +85,7 @@ public class MainApplicationFrame extends JFrame
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
         logWindow.setLocation(10,10);
         logWindow.setSize(300, 800);
-        setMinimumSize(logWindow.getSize());
-        logWindow.pack();
-        Logger.debug("Протокол работает");
+        Logger.debug(Localization.getResourceBundle().getString("log.protocol_running"));
         return logWindow;
     }
 
@@ -100,6 +102,7 @@ public class MainApplicationFrame extends JFrame
         JMenu lookAndFeelMenu = createLookAndFeelMenu();
         JMenu testMenu = createTestMenu();
         JMenu openWindows = createOpenWindowsMenu();
+        JMenu changeLanguage = createChangeLanguage();
 
         JMenuItem exitPoint = closeApplication();
         exitPoint.setMaximumSize(exitPoint.getPreferredSize());
@@ -107,14 +110,68 @@ public class MainApplicationFrame extends JFrame
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
         menuBar.add(openWindows);
+        menuBar.add(changeLanguage);
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(exitPoint);
 
         return menuBar;
     }
 
+
+
+
+    private JMenu createChangeLanguage(){
+        JMenu changeLanguage = new JMenu(Localization.getResourceBundle().getString("menu.language"));
+        changeLanguage.setMnemonic(KeyEvent.VK_V);
+
+        changeLanguage.add(changeRussianLanguage());
+        changeLanguage.add(changeEnglishLanguage());
+
+        return changeLanguage;
+    }
+
+    private JMenuItem changeRussianLanguage(){
+        JMenuItem russianLanguage = new JMenuItem(
+               Localization.getResourceBundle().getString("menu.russianLanguage"),
+                KeyEvent.VK_S);
+       russianLanguage.addActionListener((event) -> {
+            Localization.setUpRussianLanguage();
+            updateLanguage();
+
+       });
+
+        return russianLanguage;
+    }
+
+    private JMenuItem changeEnglishLanguage(){
+        JMenuItem englishLanguage = new JMenuItem(
+                Localization.getResourceBundle().getString("menu.englishLanguage"),
+                KeyEvent.VK_S);
+        englishLanguage.addActionListener((event) -> {
+            Localization.setUpEnglishLanguage();
+            updateLanguage();
+
+        });
+
+        return englishLanguage;
+    }
+
+    private void updateLanguage() {
+        if (coordWindow != null) coordWindow.updateText();
+        if (gameWindow != null) gameWindow.updateText();
+        if (logWindow != null) logWindow.updateText();
+
+        setJMenuBar(generateMenuBar());
+        SwingUtilities.updateComponentTreeUI(this);
+
+        validate();
+        repaint();
+    }
+
     private JMenuItem createCrossplatformLookAndFeel(){
-        JMenuItem crossplatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
+        JMenuItem crossplatformLookAndFeel = new JMenuItem(
+                Localization.getResourceBundle().getString("menu.lookAndFeel.crossplatform"),
+                KeyEvent.VK_S);
         crossplatformLookAndFeel.addActionListener((event) -> {
             setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             this.invalidate();
@@ -124,7 +181,9 @@ public class MainApplicationFrame extends JFrame
     }
 
     private JMenuItem createSystemLookAndFeel(){
-        JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
+        JMenuItem systemLookAndFeel = new JMenuItem(
+                Localization.getResourceBundle().getString("menu.lookAndFeel.system"),
+                KeyEvent.VK_S);
         systemLookAndFeel.addActionListener((event) -> {
             setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             this.invalidate();
@@ -134,19 +193,21 @@ public class MainApplicationFrame extends JFrame
     }
 
     private JMenuItem createAddLogMessageItem(){
-        JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
+        JMenuItem addLogMessageItem = new JMenuItem(
+                Localization.getResourceBundle().getString("menu.tests.addLog"),
+                KeyEvent.VK_S);
         addLogMessageItem.addActionListener((event) -> {
-            Logger.debug("Новая строка");
+            Logger.debug(Localization.getResourceBundle().getString("log.new_line"));
         });
 
         return addLogMessageItem;
     }
 
     private JMenu createLookAndFeelMenu(){
-        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
+        JMenu lookAndFeelMenu = new JMenu(Localization.getResourceBundle().getString("menu.lookAndFeel"));
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
-                "Управление режимом отображения приложения");
+                Localization.getResourceBundle().getString("menu.lookAndFeel.description"));
 
         lookAndFeelMenu.add(createSystemLookAndFeel());
         lookAndFeelMenu.add(createCrossplatformLookAndFeel());
@@ -155,7 +216,7 @@ public class MainApplicationFrame extends JFrame
     }
 
     private JMenu createOpenWindowsMenu(){
-        JMenu openWindowsMenu = new JMenu("Открыть окна");
+        JMenu openWindowsMenu = new JMenu(Localization.getResourceBundle().getString("menu.windows"));
         openWindowsMenu.setMnemonic(KeyEvent.VK_V);
 
         openWindowsMenu.add(createOpenGameWindow());
@@ -166,7 +227,7 @@ public class MainApplicationFrame extends JFrame
     }
 
     private JMenuItem createOpenGameWindow(){
-        JMenuItem createOpenGameWindow = new JMenuItem("Открыть игру");
+        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.game"));
         createOpenGameWindow.addActionListener(e -> {
             boolean windowExists = false;
             for(JInternalFrame frame : desktopPane.getAllFrames()){
@@ -175,16 +236,16 @@ public class MainApplicationFrame extends JFrame
                     break;
                 }
             }
-        if(!windowExists){
-            addGameWindow();
-            Logger.debug("Игры открылась!");
-        }
+            if(!windowExists){
+                addGameWindow();
+                Logger.debug(Localization.getResourceBundle().getString("log.game_opened"));
+            }
         });
         return createOpenGameWindow;
     }
 
     private JMenuItem createOpenLogWindow(){
-        JMenuItem createOpenGameWindow = new JMenuItem("Открыть логи");
+        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.log"));
         createOpenGameWindow.addActionListener(e -> {
             boolean windowExists = false;
             for(JInternalFrame frame : desktopPane.getAllFrames()){
@@ -195,14 +256,14 @@ public class MainApplicationFrame extends JFrame
             }
             if(!windowExists){
                 addLogWindow();
-                Logger.debug("Логи открылись!");
+                Logger.debug(Localization.getResourceBundle().getString("log.logs_opened"));
             }
         });
         return createOpenGameWindow;
     }
 
     private JMenuItem createOpenCoordinates(){
-        JMenuItem createOpenGameWindow = new JMenuItem("Открыть координаты");
+        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.coord"));
         createOpenGameWindow.addActionListener(e -> {
             boolean windowExists = false;
             for(JInternalFrame frame : desktopPane.getAllFrames()){
@@ -213,17 +274,17 @@ public class MainApplicationFrame extends JFrame
             }
             if(!windowExists){
                 addCoordinateWindow();
-                Logger.debug("координаты открылись!");
+                Logger.debug(Localization.getResourceBundle().getString("log.coords_opened"));
             }
         });
         return createOpenGameWindow;
     }
 
     private JMenu createTestMenu(){
-        JMenu testMenu = new JMenu("Тесты");
+        JMenu testMenu = new JMenu(Localization.getResourceBundle().getString("menu.tests"));
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription(
-                "Тестовые команды");
+                Localization.getResourceBundle().getString("menu.tests.description"));
 
         testMenu.add(createAddLogMessageItem());
 
@@ -231,14 +292,16 @@ public class MainApplicationFrame extends JFrame
     }
 
     private JMenuItem closeApplication(){
-        JMenuItem exitPoint = new JMenuItem("Закрыть приложение");
+        JMenuItem exitPoint = new JMenuItem(Localization.getResourceBundle().getString("menu.exit"));
         exitPoint.addActionListener(e -> closeYesNoOption());
         return exitPoint;
     }
 
     private void closeYesNoOption(){
-        int result = JOptionPane.showConfirmDialog(null, "Вы действительно хотите выйти?",
-                "",JOptionPane.YES_NO_OPTION);
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                Localization.getResourceBundle().getString("dialog.exit.message"),
+                Localization.getResourceBundle().getString("dialog.exit.title"),JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION){
             Window[] windows = Window.getWindows();
             for(Window window: windows){
