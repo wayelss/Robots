@@ -1,5 +1,7 @@
 package gui;
 
+import log.Logger;
+
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Graphics;
@@ -55,6 +57,12 @@ public class GameVisualizer extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 model.setTargetPosition(e.getPoint());
+                String coordinates = MessageFormatCache.checkPattern(
+                        Localization.getResourceBundle().getString("log.target_set")
+                        ,e.getX()
+                        ,e.getY()
+                );
+                Logger.debug(coordinates);
                 repaint();
             }
         });
