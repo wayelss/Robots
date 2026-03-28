@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.geom.Point2D;
 import java.awt.BorderLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -35,20 +36,19 @@ public class CoordinateWindow extends JInternalFrame implements PropertyChangeLi
 
         String pattern = resourceBundle.getString("label.coordinates");
 
-        int currentX = (int) robotModel.getX();
-        int currentY = (int) robotModel.getY();
+        double currentX = robotModel.getX();
+        double currentY = robotModel.getY();
 
-        String formamtedText = MessageFormat.format(pattern,currentX,currentY);
-        coordinatesLabel.setText(formamtedText);
-
+        String formattedText = MessageFormat.format(pattern, currentX, currentY);
+        coordinatesLabel.setText(formattedText);
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if ("robotPosition".equals(evt.getPropertyName())) {
-            java.awt.Point pos = (java.awt.Point) evt.getNewValue();
+            Point2D pos = (Point2D) evt.getNewValue();
             String pattern = Localization.getResourceBundle().getString("label.coordinates");
-            String formattedText = MessageFormatCache.checkPattern(pattern,pos.x,pos.y);
+            String formattedText = MessageFormatCache.checkPattern(pattern, pos.getX(), pos.getY());
 
             coordinatesLabel.setText(formattedText);
         }

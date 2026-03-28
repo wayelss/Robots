@@ -1,5 +1,6 @@
 /bin/
 /.settings/
+/.idea/
 
 # Project exclude paths
 /target/
