@@ -4,6 +4,11 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import log.Logger;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
@@ -85,6 +90,7 @@ public class MainApplicationFrame extends JFrame {
         JMenu testMenu = createTestMenu();
         JMenu openWindows = createOpenWindowsMenu();
         JMenu changeLanguage = createChangeLanguage();
+        JMenu gameSettings = createGameSettingsMenu();
 
         JMenuItem exitPoint = closeApplication();
         exitPoint.setMaximumSize(exitPoint.getPreferredSize());
@@ -93,6 +99,7 @@ public class MainApplicationFrame extends JFrame {
         menuBar.add(testMenu);
         menuBar.add(openWindows);
         menuBar.add(changeLanguage);
+        menuBar.add(gameSettings);
         menuBar.add(Box.createHorizontalGlue());
         menuBar.add(exitPoint);
 
@@ -122,6 +129,66 @@ public class MainApplicationFrame extends JFrame {
                 russianLanguage, englishLanguage
         );
     }
+
+    private void chooseAndSetImage(boolean isRobot) {
+        JFileChooser fileChooser = new JFileChooser();
+
+        fileChooser.setDialogTitle(Localization.getResourceBundle().getString("dialog.fileChooser.title"));
+
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG, JPG, GIF", "png", "jpg", "jpeg", "gif");
+        fileChooser.setFileFilter(filter);
+
+        int result = fileChooser.showOpenDialog(this);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try {
+                Image newImage = ImageIO.read(selectedFile);
+
+                if (newImage != null && gameWindow != null) {
+                    if (isRobot) {
+                        gameWindow.setRobotImage(newImage);
+                        Logger.debug(Localization.getResourceBundle().getString("log.robot_image_changed"));
+                    } else {
+                        gameWindow.setTargetImage(newImage);
+                        Logger.debug(Localization.getResourceBundle().getString("log.target_image_changed"));
+                    }
+                } else if (gameWindow == null) {
+
+                    JOptionPane.showMessageDialog(this,
+                            Localization.getResourceBundle().getString("dialog.fileChooser.warning"),
+                            Localization.getResourceBundle().getString("dialog.fileChooser.warningTitle"),
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (IOException ex) {
+
+                Logger.debug(Localization.getResourceBundle().getString("dialog.fileChooser.error"));
+                JOptionPane.showMessageDialog(this,
+                        Localization.getResourceBundle().getString("dialog.fileChooser.error"),
+                        Localization.getResourceBundle().getString("dialog.fileChooser.errorTitle"),
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private JMenu createGameSettingsMenu() {
+        JMenuItem changeRobotImage = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.gameSettings.changeRobot"),
+                () -> chooseAndSetImage(true)
+        );
+
+        JMenuItem changeTargetImage = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.gameSettings.changeTarget"),
+                () -> chooseAndSetImage(false)
+        );
+
+        return MenuBuilder.createJMenu(
+                Localization.getResourceBundle().getString("menu.gameSettings"),
+                Localization.getResourceBundle().getString("menu.gameSettings.description"),
+                changeRobotImage, changeTargetImage
+        );
+    }
+
 
     private JMenu createLookAndFeelMenu() {
         JMenuItem createSystemLookAndFeel = MenuBuilder.createJMenuItem(

@@ -26,4 +26,12 @@ public class GameWindow extends JInternalFrame
         ResourceBundle resourceBundle = Localization.getResourceBundle();
         setTitle(resourceBundle.getString("window.game.title"));
     }
+
+    public void setRobotImage(java.awt.Image image) {
+        m_visualizer.setRobotImage(image);
+    }
+
+    public void setTargetImage(java.awt.Image image) {
+        m_visualizer.setTargetImage(image);
+    }
 }

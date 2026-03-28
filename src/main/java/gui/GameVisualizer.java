@@ -69,6 +69,16 @@ public class GameVisualizer extends JPanel {
         setDoubleBuffered(true);
     }
 
+    public void setRobotImage(Image newImage) {
+        this.robotImage = newImage;
+        repaint();
+    }
+
+    public void setTargetImage(Image newImage) {
+        this.targetImage = newImage;
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics g)
     {
