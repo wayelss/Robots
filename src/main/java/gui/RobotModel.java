@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Timer;
@@ -11,10 +12,10 @@ public class RobotModel {
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
     private volatile double m_robotDirection = 0;
-    private volatile int m_targetPositionX = 150;
-    private volatile int m_targetPositionY = 100;
+    private volatile double m_targetPositionX = 150.0;
+    private volatile double m_targetPositionY = 100.0;
 
-    private static final double maxVelocity = 0.1;
+    private static final double maxVelocity = 0.2;
     private static final double maxAngularVelocity = 0.005;
 
 
@@ -34,16 +35,16 @@ public class RobotModel {
         support.addPropertyChangeListener(pcl);
     }
 
-    public void setTargetPosition(Point p) {
-        m_targetPositionX = p.x;
-        m_targetPositionY = p.y;
+    public void setTargetPosition(Point2D p) {
+        m_targetPositionX = p.getX();
+        m_targetPositionY = p.getY();
     }
 
     public double getX() { return m_robotPositionX; }
     public double getY() { return m_robotPositionY; }
     public double getDirection() { return m_robotDirection; }
-    public int getTargetX() { return m_targetPositionX; }
-    public int getTargetY() { return m_targetPositionY; }
+    public double getTargetX() { return m_targetPositionX; }
+    public double getTargetY() { return m_targetPositionY; }
 
     private static double distance(double x1, double y1, double x2, double y2)
     {
@@ -78,7 +79,8 @@ public class RobotModel {
 
         moveRobot(velocity, angularVelocity, 10);
 
-        support.firePropertyChange("robotPosition", null, new Point((int)m_robotPositionX, (int)m_robotPositionY));
+        support.firePropertyChange("robotPosition", null,
+                new Point2D.Double(m_robotPositionX, m_robotPositionY));
     }
 
     private static double applyLimits(double value, double min, double max)

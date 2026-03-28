@@ -68,7 +68,7 @@ public class GameVisualizer extends JPanel {
         Graphics2D g2d = (Graphics2D)g;
 
         drawRobot(g2d, (int)Math.round(model.getX()), (int)Math.round(model.getY()), model.getDirection());
-        drawTarget(g2d, model.getTargetX(), model.getTargetY());
+        drawTarget(g2d, (int)model.getTargetX(), (int)model.getTargetY());
     }
 
     private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2)
