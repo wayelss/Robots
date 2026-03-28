@@ -2,24 +2,10 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyVetoException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.ResourceBundle;
-
 import javax.swing.*;
-
 import log.Logger;
 
-import static java.awt.SystemColor.desktop;
-
-
-public class MainApplicationFrame extends JFrame
-{
+public class MainApplicationFrame extends JFrame {
     private final JDesktopPane desktopPane = new JDesktopPane();
     private WindowStateManager windowStateManager = new WindowStateManager(desktopPane);
     private RobotModel robotModel = new RobotModel();
@@ -35,7 +21,6 @@ public class MainApplicationFrame extends JFrame
         setJMenuBar(generateMenuBar());
         configureWindowClosing();
     }
-
 
     private void configureMainWindow() {
         int inset = 50;
@@ -80,23 +65,20 @@ public class MainApplicationFrame extends JFrame
         addWindow(logWindow);
     }
 
-    protected LogWindow createLogWindow()
-    {
-        LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
-        logWindow.setLocation(10,10);
-        logWindow.setSize(300, 800);
+    protected LogWindow createLogWindow() {
+        LogWindow window = new LogWindow(Logger.getDefaultLogSource());
+        window.setLocation(10, 10);
+        window.setSize(300, 800);
         Logger.debug(Localization.getResourceBundle().getString("log.protocol_running"));
-        return logWindow;
+        return window;
     }
 
-    protected void addWindow(JInternalFrame frame)
-    {
+    protected void addWindow(JInternalFrame frame) {
         desktopPane.add(frame);
         frame.setVisible(true);
     }
 
-    private JMenuBar generateMenuBar()
-    {
+    private JMenuBar generateMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
         JMenu lookAndFeelMenu = createLookAndFeelMenu();
@@ -117,43 +99,121 @@ public class MainApplicationFrame extends JFrame
         return menuBar;
     }
 
+    private JMenu createChangeLanguage() {
+        JMenuItem russianLanguage = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.russianLanguage"),
+                () -> {
+                    Localization.setUpRussianLanguage();
+                    updateLanguage();
+                }
+        );
 
-
-
-    private JMenu createChangeLanguage(){
-        JMenu changeLanguage = new JMenu(Localization.getResourceBundle().getString("menu.language"));
-        changeLanguage.setMnemonic(KeyEvent.VK_V);
-
-        changeLanguage.add(changeRussianLanguage());
-        changeLanguage.add(changeEnglishLanguage());
-
-        return changeLanguage;
-    }
-
-    private JMenuItem changeRussianLanguage(){
-        JMenuItem russianLanguage = new JMenuItem(
-               Localization.getResourceBundle().getString("menu.russianLanguage"),
-                KeyEvent.VK_S);
-       russianLanguage.addActionListener((event) -> {
-            Localization.setUpRussianLanguage();
-            updateLanguage();
-
-       });
-
-        return russianLanguage;
-    }
-
-    private JMenuItem changeEnglishLanguage(){
-        JMenuItem englishLanguage = new JMenuItem(
+        JMenuItem englishLanguage = MenuBuilder.createJMenuItem(
                 Localization.getResourceBundle().getString("menu.englishLanguage"),
-                KeyEvent.VK_S);
-        englishLanguage.addActionListener((event) -> {
-            Localization.setUpEnglishLanguage();
-            updateLanguage();
+                () -> {
+                    Localization.setUpEnglishLanguage();
+                    updateLanguage();
+                }
+        );
 
-        });
+        return MenuBuilder.createJMenu(
+                Localization.getResourceBundle().getString("menu.language"),
+                "",
+                russianLanguage, englishLanguage
+        );
+    }
 
-        return englishLanguage;
+    private JMenu createLookAndFeelMenu() {
+        JMenuItem createSystemLookAndFeel = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.lookAndFeel.system"),
+                () -> {
+                    setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    this.invalidate();
+                }
+        );
+        JMenuItem createCrossplatformLookAndFeel = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.lookAndFeel.crossplatform"),
+                () -> {
+                    setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                    this.invalidate();
+                }
+        );
+        return MenuBuilder.createJMenu(
+                Localization.getResourceBundle().getString("menu.lookAndFeel"),
+                Localization.getResourceBundle().getString("menu.lookAndFeel.description"),
+                createSystemLookAndFeel, createCrossplatformLookAndFeel
+        );
+    }
+
+    private JMenu createTestMenu() {
+        JMenuItem logMessageItem = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.tests.addLog"),
+                () -> Logger.debug(Localization.getResourceBundle().getString("log.new_line"))
+        );
+        return MenuBuilder.createJMenu(
+                Localization.getResourceBundle().getString("menu.tests"),
+                Localization.getResourceBundle().getString("menu.tests.description"),
+                logMessageItem
+        );
+    }
+
+    private JMenu createOpenWindowsMenu() {
+        JMenuItem openGameWindow = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.windows.game"),
+                () -> {
+                    boolean windowExists = false;
+                    for (JInternalFrame frame : desktopPane.getAllFrames()) {
+                        if (frame instanceof GameWindow) {
+                            windowExists = true;
+                            break;
+                        }
+                    }
+                    if (!windowExists) {
+                        addGameWindow();
+                        Logger.debug(Localization.getResourceBundle().getString("log.game_opened"));
+                    }
+                }
+        );
+
+        JMenuItem openLogWindow = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.windows.log"),
+                () -> {
+                    boolean windowExists = false;
+                    for (JInternalFrame frame : desktopPane.getAllFrames()) {
+                        if (frame instanceof LogWindow) {
+                            windowExists = true;
+                            break;
+                        }
+                    }
+                    if (!windowExists) {
+                        addLogWindow();
+                        Logger.debug(Localization.getResourceBundle().getString("log.logs_opened"));
+                    }
+                }
+        );
+
+        JMenuItem openCoordinatesWindow = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.windows.coord"),
+                () -> {
+                    boolean windowExists = false;
+                    for (JInternalFrame frame : desktopPane.getAllFrames()) {
+                        if (frame instanceof CoordinateWindow) {
+                            windowExists = true;
+                            break;
+                        }
+                    }
+                    if (!windowExists) {
+                        addCoordinateWindow();
+                        Logger.debug(Localization.getResourceBundle().getString("log.coords_opened"));
+                    }
+                }
+        );
+
+        return MenuBuilder.createJMenu(
+                Localization.getResourceBundle().getString("menu.windows"),
+                "",
+                openGameWindow, openLogWindow, openCoordinatesWindow
+        );
     }
 
     private void updateLanguage() {
@@ -168,143 +228,21 @@ public class MainApplicationFrame extends JFrame
         repaint();
     }
 
-    private JMenuItem createCrossplatformLookAndFeel(){
-        JMenuItem crossplatformLookAndFeel = new JMenuItem(
-                Localization.getResourceBundle().getString("menu.lookAndFeel.crossplatform"),
-                KeyEvent.VK_S);
-        crossplatformLookAndFeel.addActionListener((event) -> {
-            setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            this.invalidate();
-        });
-
-        return crossplatformLookAndFeel;
+    private JMenuItem closeApplication() {
+        return MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.exit"),
+                this::closeYesNoOption
+        );
     }
 
-    private JMenuItem createSystemLookAndFeel(){
-        JMenuItem systemLookAndFeel = new JMenuItem(
-                Localization.getResourceBundle().getString("menu.lookAndFeel.system"),
-                KeyEvent.VK_S);
-        systemLookAndFeel.addActionListener((event) -> {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            this.invalidate();
-        });
-
-        return systemLookAndFeel;
-    }
-
-    private JMenuItem createAddLogMessageItem(){
-        JMenuItem addLogMessageItem = new JMenuItem(
-                Localization.getResourceBundle().getString("menu.tests.addLog"),
-                KeyEvent.VK_S);
-        addLogMessageItem.addActionListener((event) -> {
-            Logger.debug(Localization.getResourceBundle().getString("log.new_line"));
-        });
-
-        return addLogMessageItem;
-    }
-
-    private JMenu createLookAndFeelMenu(){
-        JMenu lookAndFeelMenu = new JMenu(Localization.getResourceBundle().getString("menu.lookAndFeel"));
-        lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
-        lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
-                Localization.getResourceBundle().getString("menu.lookAndFeel.description"));
-
-        lookAndFeelMenu.add(createSystemLookAndFeel());
-        lookAndFeelMenu.add(createCrossplatformLookAndFeel());
-
-        return lookAndFeelMenu;
-    }
-
-    private JMenu createOpenWindowsMenu(){
-        JMenu openWindowsMenu = new JMenu(Localization.getResourceBundle().getString("menu.windows"));
-        openWindowsMenu.setMnemonic(KeyEvent.VK_V);
-
-        openWindowsMenu.add(createOpenGameWindow());
-        openWindowsMenu.add(createOpenLogWindow());
-        openWindowsMenu.add(createOpenCoordinates());
-
-        return openWindowsMenu;
-    }
-
-    private JMenuItem createOpenGameWindow(){
-        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.game"));
-        createOpenGameWindow.addActionListener(e -> {
-            boolean windowExists = false;
-            for(JInternalFrame frame : desktopPane.getAllFrames()){
-                if (frame instanceof GameWindow) {
-                    windowExists = true;
-                    break;
-                }
-            }
-            if(!windowExists){
-                addGameWindow();
-                Logger.debug(Localization.getResourceBundle().getString("log.game_opened"));
-            }
-        });
-        return createOpenGameWindow;
-    }
-
-    private JMenuItem createOpenLogWindow(){
-        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.log"));
-        createOpenGameWindow.addActionListener(e -> {
-            boolean windowExists = false;
-            for(JInternalFrame frame : desktopPane.getAllFrames()){
-                if (frame instanceof LogWindow) {
-                    windowExists = true;
-                    break;
-                }
-            }
-            if(!windowExists){
-                addLogWindow();
-                Logger.debug(Localization.getResourceBundle().getString("log.logs_opened"));
-            }
-        });
-        return createOpenGameWindow;
-    }
-
-    private JMenuItem createOpenCoordinates(){
-        JMenuItem createOpenGameWindow = new JMenuItem(Localization.getResourceBundle().getString("menu.windows.coord"));
-        createOpenGameWindow.addActionListener(e -> {
-            boolean windowExists = false;
-            for(JInternalFrame frame : desktopPane.getAllFrames()){
-                if (frame instanceof CoordinateWindow) {
-                    windowExists = true;
-                    break;
-                }
-            }
-            if(!windowExists){
-                addCoordinateWindow();
-                Logger.debug(Localization.getResourceBundle().getString("log.coords_opened"));
-            }
-        });
-        return createOpenGameWindow;
-    }
-
-    private JMenu createTestMenu(){
-        JMenu testMenu = new JMenu(Localization.getResourceBundle().getString("menu.tests"));
-        testMenu.setMnemonic(KeyEvent.VK_T);
-        testMenu.getAccessibleContext().setAccessibleDescription(
-                Localization.getResourceBundle().getString("menu.tests.description"));
-
-        testMenu.add(createAddLogMessageItem());
-
-        return testMenu;
-    }
-
-    private JMenuItem closeApplication(){
-        JMenuItem exitPoint = new JMenuItem(Localization.getResourceBundle().getString("menu.exit"));
-        exitPoint.addActionListener(e -> closeYesNoOption());
-        return exitPoint;
-    }
-
-    private void closeYesNoOption(){
+    private void closeYesNoOption() {
         int result = JOptionPane.showConfirmDialog(
                 null,
                 Localization.getResourceBundle().getString("dialog.exit.message"),
-                Localization.getResourceBundle().getString("dialog.exit.title"),JOptionPane.YES_NO_OPTION);
-        if (result == JOptionPane.YES_OPTION){
+                Localization.getResourceBundle().getString("dialog.exit.title"), JOptionPane.YES_NO_OPTION);
+        if (result == JOptionPane.YES_OPTION) {
             Window[] windows = Window.getWindows();
-            for(Window window: windows){
+            for (Window window : windows) {
                 windowStateManager.saveWindowStates();
                 window.dispose();
                 System.exit(0);
@@ -312,18 +250,12 @@ public class MainApplicationFrame extends JFrame
         }
     }
 
-    private void setLookAndFeel(String className)
-    {
-        try
-        {
+    private void setLookAndFeel(String className) {
+        try {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
-        }
-        catch (ClassNotFoundException | InstantiationException
-               | IllegalAccessException | UnsupportedLookAndFeelException e)
-        {
-            // just ignore
+        } catch (ClassNotFoundException | InstantiationException
+                 | IllegalAccessException | UnsupportedLookAndFeelException e) {
         }
     }
-
 }
