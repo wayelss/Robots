@@ -43,6 +43,15 @@ public class MainApplicationFrame extends JFrame {
     }
 
     private void addGameWindow() {
+        if (gameWindow != null && !gameWindow.isClosed()) {
+            try {
+                gameWindow.setSelected(true);
+            } catch (java.beans.PropertyVetoException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
         gameWindow = new GameWindow(robotModel);
         gameWindow.setSize(400, 400);
         addWindow(gameWindow);
@@ -131,8 +140,26 @@ public class MainApplicationFrame extends JFrame {
     }
 
     private void chooseAndSetImage(boolean isRobot) {
-        JFileChooser fileChooser = new JFileChooser();
 
+        if (gameWindow == null) {
+            showWarningDialog();
+            return;
+        }
+
+        File selectedFile = chooseImageFile();
+        if (selectedFile == null) {
+            return;
+        }
+
+        Image newImage = processImageFile(selectedFile);
+
+        if (newImage != null) {
+            applyImageToGame(newImage, isRobot);
+        }
+    }
+
+    private File chooseImageFile() {
+        JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle(Localization.getResourceBundle().getString("dialog.fileChooser.title"));
 
         FileNameExtensionFilter filter = new FileNameExtensionFilter("PNG, JPG, GIF", "png", "jpg", "jpeg", "gif");
@@ -141,34 +168,76 @@ public class MainApplicationFrame extends JFrame {
         int result = fileChooser.showOpenDialog(this);
 
         if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            try {
-                Image newImage = ImageIO.read(selectedFile);
-
-                if (newImage != null && gameWindow != null) {
-                    if (isRobot) {
-                        gameWindow.setRobotImage(newImage);
-                        Logger.debug(Localization.getResourceBundle().getString("log.robot_image_changed"));
-                    } else {
-                        gameWindow.setTargetImage(newImage);
-                        Logger.debug(Localization.getResourceBundle().getString("log.target_image_changed"));
-                    }
-                } else if (gameWindow == null) {
-
-                    JOptionPane.showMessageDialog(this,
-                            Localization.getResourceBundle().getString("dialog.fileChooser.warning"),
-                            Localization.getResourceBundle().getString("dialog.fileChooser.warningTitle"),
-                            JOptionPane.WARNING_MESSAGE);
-                }
-            } catch (IOException ex) {
-
-                Logger.debug(Localization.getResourceBundle().getString("dialog.fileChooser.error"));
-                JOptionPane.showMessageDialog(this,
-                        Localization.getResourceBundle().getString("dialog.fileChooser.error"),
-                        Localization.getResourceBundle().getString("dialog.fileChooser.errorTitle"),
-                        JOptionPane.ERROR_MESSAGE);
-            }
+            return fileChooser.getSelectedFile();
         }
+        return null;
+    }
+
+    private Image processImageFile(File file) {
+        try {
+            Image newImage = ImageIO.read(file);
+
+            if (newImage == null) {
+                // Если Java не поняла формат (например, WEBP)
+                showErrorDialog("Не удалось распознать формат изображения.");
+                return null;
+            }
+
+            return scaleImageIfTooLarge(newImage, 100, 100);
+
+        } catch (IOException ex) {
+            Logger.debug(Localization.getResourceBundle().getString("dialog.fileChooser.error"));
+            showErrorDialog(Localization.getResourceBundle().getString("dialog.fileChooser.error"));
+            return null;
+        }
+    }
+
+    private void applyImageToGame(Image image, boolean isRobot) {
+        if (isRobot) {
+            gameWindow.setRobotImage(image);
+            Logger.debug(Localization.getResourceBundle().getString("log.robot_image_changed"));
+        } else {
+            gameWindow.setTargetImage(image);
+            Logger.debug(Localization.getResourceBundle().getString("log.target_image_changed"));
+        }
+    }
+
+    private void showWarningDialog() {
+        JOptionPane.showMessageDialog(this,
+                Localization.getResourceBundle().getString("dialog.fileChooser.warning"),
+                Localization.getResourceBundle().getString("dialog.fileChooser.warningTitle"),
+                JOptionPane.WARNING_MESSAGE);
+    }
+
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this,
+                message,
+                Localization.getResourceBundle().getString("dialog.fileChooser.errorTitle"),
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    private Image scaleImageIfTooLarge(Image img, int maxWidth, int maxHeight) {
+        if (img == null) return null;
+
+        int width = img.getWidth(null);
+        int height = img.getHeight(null);
+
+        if (width <= maxWidth && height <= maxHeight && width > 0) {
+            return img;
+        }
+
+        double ratio = Math.min((double) maxWidth / width, (double) maxHeight / height);
+        int newWidth = (int) (width * ratio);
+        int newHeight = (int) (height * ratio);
+
+        java.awt.image.BufferedImage scaledBI = new java.awt.image.BufferedImage(
+                newWidth, newHeight, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = scaledBI.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(img, 0, 0, newWidth, newHeight, null);
+        g.dispose();
+
+        return scaledBI;
     }
 
     private JMenu createGameSettingsMenu() {
@@ -182,11 +251,31 @@ public class MainApplicationFrame extends JFrame {
                 () -> chooseAndSetImage(false)
         );
 
-        return MenuBuilder.createJMenu(
+        JMenuItem resetRobotImage = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.gameSettings.resetRobot"),
+                () -> {
+                    if (gameWindow != null) gameWindow.resetRobotImage();
+                }
+        );
+
+        JMenuItem resetTargetImage = MenuBuilder.createJMenuItem(
+                Localization.getResourceBundle().getString("menu.gameSettings.resetTarget"),
+                () -> {
+                    if (gameWindow != null) gameWindow.resetTargetImage();
+                }
+        );
+
+        JMenu menu = MenuBuilder.createJMenu(
                 Localization.getResourceBundle().getString("menu.gameSettings"),
                 Localization.getResourceBundle().getString("menu.gameSettings.description"),
                 changeRobotImage, changeTargetImage
         );
+
+        menu.addSeparator();
+        menu.add(resetRobotImage);
+        menu.add(resetTargetImage);
+
+        return menu;
     }
 
 

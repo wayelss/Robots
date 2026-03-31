@@ -21,9 +21,12 @@ import javax.imageio.ImageIO;
 public class GameVisualizer extends JPanel {
     private final Timer m_timer = initTimer();
     private final RobotModel model;
-    private Image targetImage;
 
+    private Image targetImage;
     private Image robotImage;
+
+    private Image defaultTargetImage;
+    private Image defaultRobotImage;
 
     private static Timer initTimer() {
         return new Timer("events generator", true);
@@ -34,6 +37,7 @@ public class GameVisualizer extends JPanel {
 
         try {
             robotImage = ImageIO.read(new File("tolsty.png"));
+            defaultRobotImage = robotImage;
         } catch (IOException e) {
             System.err.println("Не удалось загрузить картинку толстого");
             e.printStackTrace();
@@ -41,10 +45,12 @@ public class GameVisualizer extends JPanel {
 
         try {
             targetImage = ImageIO.read(new File("mac-combo.png"));
+            defaultTargetImage = targetImage;
         } catch (IOException e) {
             System.err.println("Не удалось загрузить картинку бургера");
             e.printStackTrace();
         }
+
 
         m_timer.schedule(new TimerTask() {
             @Override
@@ -76,6 +82,16 @@ public class GameVisualizer extends JPanel {
 
     public void setTargetImage(Image newImage) {
         this.targetImage = newImage;
+        repaint();
+    }
+
+    public void resetRobotImage() {
+        this.robotImage = defaultRobotImage;
+        repaint();
+    }
+
+    public void resetTargetImage() {
+        this.targetImage = defaultTargetImage;
         repaint();
     }
 

@@ -34,4 +34,12 @@ public class GameWindow extends JInternalFrame
     public void setTargetImage(java.awt.Image image) {
         m_visualizer.setTargetImage(image);
     }
+
+    public void resetRobotImage() {
+        m_visualizer.resetRobotImage();
+    }
+
+    public void resetTargetImage() {
+        m_visualizer.resetTargetImage();
+    }
 }
